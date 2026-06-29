@@ -3,6 +3,28 @@
 > 一个本地优先、隐私安全的个人生活助理 / AI 秘书：住在你电脑里，越用越懂你、会主动关心你、
 > 能帮你在电脑上把活干完，并且可以按需安装 Skill 自我进化。
 
+## 关键地址
+
+| 入口 | 地址 |
+|---|---|
+| 项目介绍主页 | http://47.119.112.225/xiaonian/ |
+| 在线 Demo | http://47.119.112.225/xiaonian/app/ |
+| 项目导航（多项目） | http://47.119.112.225/ |
+| GitHub 源码 | https://github.com/bcefghj/xiaonian |
+
+> 注：在线 Demo 需服务器安全组开放 80 端口；服务已通过 nginx + systemd 在本机回环正常运行。
+
+## 作者
+
+| 项 | 信息 |
+|---|---|
+| 参赛者 | 戴尚好 |
+| 学校 | 中国科学技术大学 |
+| GitHub | [bcefghj](https://github.com/bcefghj) |
+| 邮箱 | bcefghj@163.com |
+| 个人主页 | [bcefghj.github.io](https://bcefghj.github.io) |
+| 赛事 | 第七届小米集团黑客马拉松 · 高校赛区 |
+
 核心只有四件事，保持精简稳定；一切"杂"能力都做成可插拔 Skill——**功能不杂，但能无限生长**。
 
 | 能力 | 说明 | 底座 |
@@ -13,7 +35,8 @@
 | 进化 | 按需装技能扩展能力（外卖 / 打车 / 周报…） | **Anthropic Agent Skills** 开放标准 |
 
 工程上**企业框架优先**：编排 **LangGraph**、记忆 **Mem0**、技能 **Agent Skills**、
-模型多 provider 可切换（**MiniMax M3 / DeepSeek / 小米 MiMo**，全 OpenAI 兼容）。
+模型多 provider 可切换（**MiniMax M2 / DeepSeek / 小米 MiMo**，OpenAI 兼容 + Anthropic 兼容双协议）。
+线上 Demo 已接入**真实 MiniMax M2**（Anthropic 兼容端点）。
 
 ## 快速开始
 
