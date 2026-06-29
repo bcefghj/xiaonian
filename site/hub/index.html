@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>戴尚好 · 项目导航</title>
+<style>
+:root{--bg:#0e0f14;--panel:#171922;--border:#2a2e3c;--text:#e8ebf2;--muted:#9aa3b6;--accent:#ff7a9c;--accent2:#7cc4ff;
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column}
+.bgglow{position:fixed;inset:0;background:radial-gradient(700px 500px at 50% -10%,rgba(255,122,156,.14),transparent),
+  radial-gradient(600px 400px at 90% 20%,rgba(124,196,255,.1),transparent);pointer-events:none}
+.wrap{max-width:1000px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
+header{padding:80px 0 30px;text-align:center}
+header h1{font-size:clamp(30px,5vw,48px);font-weight:900;letter-spacing:1px}
+header h1 .g{background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+header p{color:var(--muted);margin-top:14px;font-size:16px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;padding:30px 0 50px}
+@media(max-width:820px){.grid{grid-template-columns:1fr}}
+.proj{background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:26px;display:flex;flex-direction:column;gap:12px;transition:.25s;min-height:230px}
+.proj.live:hover{transform:translateY(-6px);border-color:var(--accent2);box-shadow:0 18px 50px rgba(0,0,0,.4)}
+.proj .face{font-size:34px}
+.proj h3{font-size:21px}
+.proj .desc{color:var(--muted);font-size:14px;flex:1}
+.badge{align-self:flex-start;font-size:12px;border-radius:20px;padding:4px 12px}
+.badge.on{background:rgba(111,224,166,.15);color:#6fe0a6;border:1px solid rgba(111,224,166,.35)}
+.badge.soon{background:rgba(154,163,182,.12);color:var(--muted);border:1px solid var(--border)}
+.proj a.enter{display:inline-flex;gap:8px;align-items:center;font-weight:700;color:#15151c;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:10px;padding:10px 16px;justify-content:center}
+.proj .links{display:flex;gap:14px;font-size:13px;color:var(--muted)}
+.proj .links a:hover{color:var(--accent2)}
+.proj.soon{opacity:.65}
+footer{margin-top:auto;padding:30px 0;text-align:center;color:var(--muted);font-size:13px;border-top:1px solid var(--border)}
+a{text-decoration:none;color:inherit}
+</style>
+</head>
+<body>
+<div class="bgglow"></div>
+<div class="wrap">
+  <header>
+    <h1>戴尚好 · <span class="g">项目导航</span></h1>
+    <p>中国科学技术大学 · 一台服务器，多个作品 · 47.119.112.225</p>
+  </header>
+  <div class="grid">
+    <div class="proj live">
+      <div class="face">(っ◕‿◕)っ</div>
+      <span class="badge on">● 运行中</span>
+      <h3>小念 XiaoNian</h3>
+      <div class="desc">你电脑里会成长的生活助理：懂你 · 主动关心 · 帮你干活 · 按需进化。本地优先、隐私安全。</div>
+      <a class="enter" href="/xiaonian/">查看项目 →</a>
+      <div class="links">
+        <a href="/xiaonian/app/" target="_blank">在线 Demo</a>
+        <a href="https://github.com/bcefghj/xiaonian" target="_blank">GitHub</a>
+      </div>
+    </div>
+    <div class="proj soon">
+      <div class="face">(｡•‿•｡)</div>
+      <span class="badge soon">○ 规划中</span>
+      <h3>项目二</h3>
+      <div class="desc">预留位。该服务器采用按项目隔离的目录与 nginx 路径路由，可平滑接入第二个作品。</div>
+      <div class="links"><span>敬请期待</span></div>
+    </div>
+    <div class="proj soon">
+      <div class="face">(｡•‿•｡)</div>
+      <span class="badge soon">○ 规划中</span>
+      <h3>项目三</h3>
+      <div class="desc">预留位。每个项目独立 systemd 服务 + 独立子路径，互不影响、独立部署与回滚。</div>
+      <div class="links"><span>敬请期待</span></div>
+    </div>
+  </div>
+</div>
+<footer>© 2026 戴尚好 · bcefghj@163.com · github.com/bcefghj</footer>
+</body>
+</html>

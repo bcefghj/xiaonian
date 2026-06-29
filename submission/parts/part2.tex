@@ -1,0 +1,484 @@
+% =====================================================================
+% Part 2 — 总体架构 / 编排 / 模型 / 记忆 / 操控 / 技能（六大内核）
+% =====================================================================
+
+\chapter{总体架构}
+
+\section{设计目标驱动的分层架构}
+小念采用清晰的\textbf{分层架构}：自上而下分为交互层、大脑层、安全链、能力层、记忆层、模型层。
+每一层职责单一、可独立替换，安全链\textbf{横切}在大脑与能力之间，确保任何"会改变世界"的操作都先过确认。
+
+\begin{center}
+\begin{tikzpicture}[
+  font=\small,
+  layer/.style={draw, rounded corners=3pt, minimum width=13cm, minimum height=0.92cm, align=center},
+  capbox/.style={draw, rounded corners=3pt, fill=accent!12, minimum width=3.9cm, minimum height=0.9cm, align=center},
+  arr/.style={-Latex, thick, accent},
+]
+\node[layer, fill=primary!12] (ui) {交互层（本地）：Web UI（对话 / 宠物 / 记忆可视化 / 可观测） · 可选 IM Bridge};
+\node[layer, fill=accent!14, below=0.45cm of ui] (brain) {大脑层（daemon）：LangGraph 编排（持久执行 + 人在环） · 主动关心引擎（cron + 预测 + 静默）};
+\node[layer, fill=good!16, below=0.45cm of brain] (sec) {安全链（横切）：写操作两步确认 · PII 上云前脱敏 · 本地 append-only 审计日志};
+\node[capbox, below=0.6cm of sec, xshift=-4.5cm] (comp) {电脑操控\\读即时 / 写确认};
+\node[capbox, below=0.6cm of sec] (skill) {Skill 系统\\Agent Skills 标准};
+\node[capbox, below=0.6cm of sec, xshift=4.5cm] (pet) {宠物形象\\状态$\to$情绪};
+\node[layer, fill=ink!10, below=0.6cm of skill] (mem) {记忆层 Mem0（本地 Qdrant + 本地隐私嵌入器 + SQLite 画像）：画像 / 状态 / 习惯 / 关系};
+\node[layer, fill=primary!10, below=0.4cm of mem] (model) {模型层 多 provider 可切换：MiniMax M2 / DeepSeek / 小米 MiMo（OpenAI + Anthropic 双协议 + 离线降级）};
+\draw[arr] (ui) -- (brain);
+\draw[arr] (brain) -- (sec);
+\draw[arr] (sec) -- (comp.north);
+\draw[arr] (sec) -- (skill.north);
+\draw[arr] (sec) -- (pet.north);
+\draw[arr] (skill) -- (mem);
+\draw[arr] (mem) -- (model);
+\end{tikzpicture}
+\end{center}
+
+\section{一次对话的端到端数据流}
+下图是用户发出一条消息后，系统内部的端到端时序（含工具调用与两步确认分支）。
+
+\begin{center}
+\begin{tikzpicture}[font=\footnotesize,
+  actor/.style={draw,fill=soft,minimum width=1.9cm,minimum height=0.7cm,align=center},
+  msg/.style={-Latex,accent,thick},
+  ret/.style={-Latex,good,thick,dashed}]
+\foreach \x/\n in {0/用户,3/Web UI,6/LangGraph,9/记忆/模型,12/安全/能力}{
+  \node[actor] (\n) at (\x,0) {\n};
+  \draw[linegray,dashed] (\x,-0.4)--(\x,-8.2);
+}
+\draw[msg] (0,-0.9)--node[above,black]{发消息}(3,-0.9);
+\draw[msg] (3,-1.5)--node[above,black]{/api/chat}(6,-1.5);
+\draw[msg] (6,-2.1)--node[above,black]{recall 记忆}(9,-2.1);
+\draw[ret] (9,-2.7)--node[below,black]{画像+相关记忆}(6,-2.7);
+\draw[msg] (6,-3.3)--node[above,black]{调用模型(注入记忆)}(9,-3.3);
+\draw[ret] (9,-3.9)--node[below,black]{文本 / tool\_calls}(6,-3.9);
+\draw[msg] (6,-4.5)--node[above,black]{工具(写操作)}(12,-4.5);
+\draw[ret] (12,-5.1)--node[below,black]{需确认 pending}(6,-5.1);
+\draw[ret] (6,-5.7)--node[below,black]{弹确认框}(3,-5.7);
+\draw[msg] (3,-6.3)--node[above,black]{用户确认}(6,-6.3);
+\draw[msg] (6,-6.9)--node[above,black]{真正执行}(12,-6.9);
+\draw[msg] (6,-7.5)--node[above,black]{persist 记忆}(9,-7.5);
+\draw[ret] (6,-8.0)--node[below,black]{流式回复}(3,-8.0);
+\end{tikzpicture}
+\end{center}
+
+\section{组件清单}
+\begin{center}
+\footnotesize
+\begin{tabularx}{\linewidth}{>{\bfseries\ttfamily\footnotesize}p{3cm} X}
+\toprule
+模块 & 职责 \\
+\midrule
+daemon/ & FastAPI 应用：REST / SSE 接口、静态 UI、生活状态推断、装配各模块 \\
+graph/ & LangGraph 状态机：persona、工具 schema 与分发、build 编排 \\
+model/ & 多 provider 模型路由（OpenAI / Anthropic 协议）+ 离线 mock + 成本估算 \\
+memory/ & Mem0 封装 + 本地隐私嵌入器 + SQLite 结构化画像 \\
+capabilities/computer/ & 电脑操控 harness（读即时 / 写确认） \\
+capabilities/skills/ & Agent Skills 注册表 + 内置技能 \\
+capabilities/pet/ & 宠物状态：信号 $\to$ 情绪 / 表情 / 文案 \\
+proactive/ & 主动关心引擎（APScheduler + 预测触发 + 静默时段） \\
+security/ & 两步确认 / PII 脱敏 / 审计日志 \\
+observability/ & 本地 trace / token / 成本追踪 \\
+eval/ & 场景评测套件（scenarios.yaml + runner） \\
+web/static/ & 三栏 Web UI（HTML / CSS / JS，零框架） \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\section{逐层选型与背书}
+\begin{center}
+\footnotesize
+\begin{tabularx}{\linewidth}{>{\bfseries}p{1.9cm} p{3.1cm} X}
+\toprule
+层 & 选型 & 依据 / 背书 \\
+\midrule
+编排 & LangGraph & 需要精确控制 + 可调试 + 生产级持久化 + 人在环；Klarna / Uber / 摩根大通生产使用，相比 CrewAI 控制更强。 \\
+记忆 & Mem0 & 业界领先 Agent 记忆层，亚秒级、跨框架可移植、可本地部署。 \\
+技能 & Agent Skills & Anthropic 2025 开源开放标准；三级渐进式披露，启动开销极低；Atlassian / Figma / Canva / Stripe / Notion 采用。 \\
+电脑操控 & 受控 harness（可选 Open Interpreter） & 读即时、写两步确认；可切 Open Interpreter（Apache-2.0，原生沙箱 + 权限 + MCP）。 \\
+确认范式 & 人在环两步确认 & 借鉴美团 DPT-Agent；preview $\to$ 确认 $\to$ 执行。 \\
+评测 & 场景成功率 & 借鉴美团 VitaBench 真实生活场景思路，看端到端完成率而非纯模型分。 \\
+模型 & 多 provider & UI 一键切换；MiniMax M2 主力（1M 上下文、原生 Function Calling、多模态），DeepSeek 备选，MiMo 生态加分。 \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+
+\chapter{编排内核：LangGraph 状态机}
+
+\section{为什么是 LangGraph}
+一个"会干活"的 Agent 不是简单的"模型 + while 循环"。它需要：多轮工具调用、\textbf{在危险操作处中断等人确认}、
+出错可恢复、状态可持久化、可观测可调试。这正是 LangGraph 的强项——它把 Agent 表达为一张\textbf{有状态的图}，
+节点是计算、边是路由，天然支持中断 / 恢复（human-in-the-loop）与检查点持久化。
+
+\section{状态机拓扑}
+小念的主循环是一张五节点图：
+
+\begin{center}
+\begin{tikzpicture}[font=\small,node distance=1.0cm and 1.4cm,
+  n/.style={draw,rounded corners=3pt,fill=accent!12,minimum width=2.2cm,minimum height=0.9cm,align=center},
+  d/.style={draw,diamond,aspect=2,fill=warn!18,align=center,inner sep=1pt},
+  arr/.style={-Latex,thick,accent}]
+\node[n] (recall) {recall\\回忆记忆};
+\node[n,right=of recall] (agent) {agent\\调用模型};
+\node[d,right=of agent] (route) {有工具?};
+\node[n,below=of route] (tools) {tools\\执行工具};
+\node[n,right=1.8cm of route] (persist) {persist\\沉淀记忆};
+\node[d,below=1.0cm of tools] (cf) {需确认?};
+\node[n,left=of cf] (wait) {中断\\等待确认};
+\draw[arr] (recall)--(agent);
+\draw[arr] (agent)--(route);
+\draw[arr] (route)--node[above]{无}(persist);
+\draw[arr] (route)--node[right]{有}(tools);
+\draw[arr] (tools)--(cf);
+\draw[arr] (cf)--node[above]{是}(wait);
+\draw[arr] (cf) -| node[near start,right]{否(读操作)} (agent);
+\draw[arr] (wait) to[bend left=20] node[left]{确认后} (tools);
+\draw[arr] (persist) -- ++(0,1.1) -| ($(agent)+(0,1.1)$) node[midway,above]{} ;
+\end{tikzpicture}
+\end{center}
+
+\noindent 路由规则：\texttt{recall} 注入画像与相关记忆 $\to$ \texttt{agent} 让模型决策 $\to$
+若返回 \texttt{tool\_calls} 则进 \texttt{tools}；写操作在此\textbf{中断}并向 UI 抛出确认请求，
+确认后再真正执行；读操作直接执行并回到 \texttt{agent}；无工具时进 \texttt{persist} 沉淀本轮记忆并结束。
+
+\section{状态定义与节点实现}
+\begin{lstlisting}[language=Python,caption={AgentState 与核心节点（graph/build.py 摘选）}]
+class AgentState(TypedDict, total=False):
+    messages: List[Dict[str, Any]]   # OpenAI 风格消息历史
+    user_text: str                   # 本轮用户输入
+    reply: str                       # 最终回复
+    tool_events: List[Dict[str, Any]]# 工具调用事件（喂给 UI 可视化）
+    pending_confirm: Optional[Dict]  # 待确认的写操作
+    rounds: int                      # 工具轮次（防失控）
+
+def _recall_node(state):
+    # 取结构化画像 + 与本轮输入相关的记忆，拼成 system 注入
+    profile = memory.profile_summary(USER_ID)
+    related = memory.search(state["user_text"], USER_ID, limit=5)
+    sys = build_system_prompt(profile, related)
+    msgs = [{"role": "system", "content": sys}] + state["messages"]
+    return {"messages": msgs, "tool_events": state.get("tool_events", [])}
+
+def _agent_node(state):
+    result = router.chat(state["messages"], tools=TOOL_SCHEMA)
+    msg = {"role": "assistant", "content": result.text}
+    if result.tool_calls:
+        msg["tool_calls"] = to_openai_tool_calls(result.tool_calls)
+    return {"messages": state["messages"] + [msg],
+            "reply": result.text, "rounds": state.get("rounds", 0)}
+\end{lstlisting}
+
+\section{多轮控制与防失控}
+工具轮次 \texttt{rounds} 设上限（默认 4 轮），超过则强制收口，避免模型陷入"调用—再调用"的死循环；
+每一步的工具事件都写入 \texttt{tool\_events}，既用于 UI 的"工具调用"可视化，也写入审计日志。
+
+\begin{lstlisting}[language=Python,caption={路由与人在环中断（graph/build.py 摘选）}]
+def _route_after_agent(state):
+    last = state["messages"][-1]
+    if last.get("tool_calls") and state.get("rounds", 0) < MAX_TOOL_ROUNDS:
+        return "tools"
+    return "persist"
+
+def _tools_node(state):
+    events = state.get("tool_events", [])
+    for tc in state["messages"][-1]["tool_calls"]:
+        name = tc["function"]["name"]
+        args = json.loads(tc["function"]["arguments"] or "{}")
+        out = dispatch_tool(name, args)          # 写操作在此返回"待确认"
+        if out.get("pending_confirm"):
+            return {"pending_confirm": out["pending_confirm"], ...}
+        events.append({"name": name, "result_preview": out["preview"]})
+        ...
+    return {"messages": ..., "tool_events": events, "rounds": state["rounds"]+1}
+\end{lstlisting}
+
+\begin{keybox}{为什么这样设计}
+把"是否需要确认"放在\textbf{工具执行节点}而非模型里，意味着安全策略\textbf{不依赖模型的自觉}——
+即便模型被诱导也无法绕过确认；这正是企业级 Agent 的安全基线。
+\end{keybox}
+
+
+\chapter{模型内核：多 Provider 与双协议}
+
+\section{统一抽象，多家可换}
+模型层把"调用一次大模型"抽象成统一接口 \texttt{router.chat(messages, tools)}，
+屏蔽底层 provider 差异。当前内置 MiniMax、DeepSeek、小米 MiMo 三家，以及离线 mock，
+通过环境变量一键切换，UI 也可热切。
+
+\begin{center}
+\footnotesize
+\begin{tabularx}{\linewidth}{>{\bfseries}p{2.2cm} p{2.2cm} p{3.0cm} X}
+\toprule
+Provider & 协议 & 模型 & 定位 \\
+\midrule
+MiniMax & Anthropic 兼容 & MiniMax-M2 & 主力：1M 上下文、原生工具调用、多模态 \\
+DeepSeek & OpenAI 兼容 & deepseek-chat & 高性价比备选 \\
+小米 MiMo & OpenAI 兼容 & mimo & 生态加分项 \\
+mock & 本地 & —— & 无额度 / 断网时优雅降级演示 \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\section{关键工程：MiniMax M2 的 Anthropic 协议适配}
+MiniMax 的 coding 套餐 key（\texttt{sk-cp-} 前缀）走的是 \textbf{Anthropic 兼容端点}
+（\addr{https://api.minimaxi.com/anthropic}），与 OpenAI 文本接口是\textbf{不同的额度池}。
+为此我们在 provider 层实现了 OpenAI $\leftrightarrow$ Anthropic 的双向消息 / 工具格式转换，
+使上层 LangGraph 始终用 OpenAI 风格消息，而底层可无缝走 Anthropic 协议。
+
+\begin{center}
+\begin{tikzpicture}[font=\footnotesize,
+  b/.style={draw,rounded corners=2pt,fill=soft,minimum height=0.7cm,align=center,minimum width=3.2cm},
+  arr/.style={-Latex,thick,accent}]
+\node[b] (oa) {OpenAI 风格消息\\role / tool\_calls / tool};
+\node[b,right=2.6cm of oa,fill=accent!12] (conv) {格式转换器};
+\node[b,right=2.6cm of conv] (an) {Anthropic messages\\text / tool\_use / tool\_result};
+\draw[arr] (oa)--node[above]{转换}(conv);
+\draw[arr] (conv)--(an);
+\draw[arr,good,dashed] (an) to[bend left=30] node[below]{响应回转} (oa);
+\end{tikzpicture}
+\end{center}
+
+\begin{lstlisting}[language=Python,caption={OpenAI→Anthropic 消息转换（model/provider.py 摘选）}]
+def _openai_to_anthropic_messages(messages):
+    system_parts, conv = [], []
+    for m in messages:
+        role = m.get("role")
+        if role == "system":
+            system_parts.append(str(m["content"])); continue
+        if role == "user":
+            conv.append({"role": "user", "content": str(m.get("content",""))}); continue
+        if role == "assistant":
+            blocks = []
+            if m.get("content"): blocks.append({"type":"text","text":m["content"]})
+            for tc in m.get("tool_calls", []):     # 工具调用 -> tool_use 块
+                fn = tc["function"]
+                blocks.append({"type":"tool_use","id":tc["id"],
+                               "name":fn["name"],"input":json.loads(fn["arguments"])})
+            conv.append({"role":"assistant","content":blocks or [{"type":"text","text":""}]})
+        elif role == "tool":                        # 工具结果 -> tool_result 块
+            conv.append({"role":"user","content":[{"type":"tool_result",
+                "tool_use_id":m["tool_call_id"],"content":str(m["content"])}]})
+    return "\n\n".join(system_parts), conv
+\end{lstlisting}
+
+\section{成本与延迟观测}
+每次调用都估算 token 成本（按各家每百万 token 价格量级），并记录延迟，写入本地 trace，
+供"可观测"面板与成本分析使用（详见第 14 章）。
+
+\section{优雅降级：离线 mock}
+当无 key / 断网 / 额度耗尽时，自动降级为\textbf{意图感知的 mock}：识别"写文件 / 列目录 / 点外卖"等意图，
+合成相应的工具调用，使"干活 + 两步确认 + 技能 + 记忆 + 宠物"整条链路在演示环境也能完整跑通；
+一旦配置可用额度，自动切回真实大模型。
+
+\begin{goodbox}{实测结论}
+线上 Demo 已接入\textbf{真实 MiniMax M2}：实测可正确理解"帮我看看桌面有哪些文件"，
+自主调用 \texttt{list\_dir} 工具读取真实桌面并给出自然语言总结。
+\end{goodbox}
+
+
+\chapter{记忆内核："懂你"}
+
+\section{Mem0 + 本地隐私嵌入器 + 结构化画像}
+"懂你"由三部分组成：Mem0 负责语义记忆（向量检索）、\textbf{本地隐私嵌入器}保证向量化在本机完成、
+SQLite \textbf{结构化画像}存储强类型的用户事实（生活状态 / 习惯 / 关系 / 偏好）。
+
+\begin{center}
+\begin{tikzpicture}[font=\footnotesize,
+  b/.style={draw,rounded corners=3pt,minimum height=0.85cm,align=center,minimum width=3.4cm},
+  arr/.style={-Latex,thick,accent}]
+\node[b,fill=primary!12] (in) {一句话 / 一个事实};
+\node[b,fill=accent!12,below left=1.0cm and 0.3cm of in] (vec) {Mem0 语义记忆\\(本地 Qdrant)};
+\node[b,fill=good!14,below right=1.0cm and 0.3cm of in] (prof) {SQLite 结构化画像\\(状态/习惯/关系)};
+\node[b,fill=ink!10,below=2.2cm of in] (recall) {recall：检索 + 画像\\拼成 system 注入};
+\node[b,fill=warn!16,left=0.8cm of vec] (emb) {本地隐私嵌入器\\向量化不出本机};
+\draw[arr] (in)--(vec); \draw[arr] (in)--(prof);
+\draw[arr] (emb)--(vec);
+\draw[arr] (vec)--(recall); \draw[arr] (prof)--(recall);
+\end{tikzpicture}
+\end{center}
+
+\section{本地隐私嵌入器}
+为彻底避免"把记忆内容发往云端 embeddings 服务"，我们实现了 \texttt{LocalHashEmbedding}：
+基于字符 n-gram 的哈希嵌入，纯本地、轻量、零网络。它以"承载 provider"的方式注册进 Mem0，
+绕过 Mem0 对 provider 名的强校验，同时保留一键替换为 fastembed / OpenAI 兼容嵌入端点的能力。
+
+\begin{lstlisting}[language=Python,caption={本地隐私嵌入器（memory/embedder.py 摘选）}]
+class LocalHashEmbedding(EmbeddingBase):
+    """字符 n-gram 哈希嵌入：纯本地、无网络、隐私优先。"""
+    def __init__(self, config=None):
+        self.dims = 384
+    def embed(self, text, memory_action=None):
+        vec = [0.0] * self.dims
+        for n in (2, 3):                       # 2-gram + 3-gram
+            for i in range(len(text) - n + 1):
+                h = hash(text[i:i+n]) % self.dims
+                vec[h] += 1.0
+        norm = math.sqrt(sum(v*v for v in vec)) or 1.0
+        return [v / norm for v in vec]          # L2 归一化
+\end{lstlisting}
+
+\section{结构化画像（强类型事实）}
+语义记忆擅长"模糊回忆"，但"用户口味 = 爱吃辣"这类强事实更适合结构化存储，便于精确查询与可视化。
+我们用 SQLite 维护一张画像表（category / key / value / updated\_at），并在 \texttt{recall} 时优先注入。
+
+\begin{lstlisting}[language=Python,caption={结构化画像写入与汇总（memory/store.py 摘选）}]
+def remember_fact(self, user_id, category, key, value):
+    self.db.execute(
+        "INSERT INTO profile(user_id,category,key,value,updated_at) VALUES(?,?,?,?,?) "
+        "ON CONFLICT(user_id,category,key) DO UPDATE SET value=?,updated_at=?",
+        (user_id, category, key, value, now(), value, now()))
+    self.db.commit()
+
+def profile_summary(self, user_id):
+    rows = self.db.execute("SELECT category,key,value FROM profile WHERE user_id=?",
+                           (user_id,)).fetchall()
+    return "\n".join(f"- [{c}] {k}: {v}" for c, k, v in rows)
+\end{lstlisting}
+
+\section{记忆生命周期}
+\begin{center}
+\begin{tikzpicture}[font=\footnotesize,node distance=0.5cm,
+  s/.style={draw,rounded corners=2pt,fill=accent!10,minimum width=2.3cm,minimum height=0.8cm,align=center},
+  arr/.style={-Latex,thick,accent}]
+\node[s] (a) {捕获\\对话/显式记};
+\node[s,right=of a] (b) {抽取\\事实/向量};
+\node[s,right=of b] (c) {存储\\Qdrant+SQLite};
+\node[s,right=of c] (d) {检索\\recall 注入};
+\node[s,right=of d] (e) {治理\\查看/删除};
+\draw[arr](a)--(b);\draw[arr](b)--(c);\draw[arr](c)--(d);\draw[arr](d)--(e);
+\draw[arr,dashed,primary](e) to[bend left=30] (c);
+\end{tikzpicture}
+\end{center}
+\noindent 用户可在 UI 中查看与删除任意记忆，确保\textbf{隐私主权}——这是与云端"黑盒记忆"的关键区别。
+
+
+\chapter{执行内核："干活"}
+
+\section{受控 harness：读即时，写确认}
+"干活"的本质是让 Agent 安全地操作你的电脑。小念实现了一个\textbf{受控执行 harness}，
+把操作分为两类，用不同安全策略对待：
+
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{>{\bfseries}p{2.4cm} p{3.4cm} X}
+\toprule
+类别 & 操作 & 策略 \\
+\midrule
+读操作 & 列目录 / 读文件 / 系统信息 & \cmark\ 即时执行（无副作用） \\
+写操作 & 写 / 删 / 移文件、跑命令、开应用、下单 & \xmark\ 先生成预览 $\to$ 两步确认 $\to$ 执行 \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\section{两步确认时序}
+\begin{center}
+\begin{tikzpicture}[font=\footnotesize,
+  actor/.style={draw,fill=soft,minimum width=2.0cm,minimum height=0.7cm,align=center},
+  msg/.style={-Latex,accent,thick}, ret/.style={-Latex,good,thick,dashed}]
+\foreach \x/\n in {0/用户,3.5/Agent,7/确认队列,10.5/执行器}{
+  \node[actor] (\n) at (\x,0) {\n}; \draw[linegray,dashed](\x,-0.4)--(\x,-5.6);}
+\draw[msg](3.5,-0.9)--node[above,black]{写操作请求}(7,-0.9);
+\draw[ret](7,-1.5)--node[below,black]{生成预览+ID}(3.5,-1.5);
+\draw[ret](3.5,-2.1)--node[below,black]{弹确认框(预览)}(0,-2.1);
+\draw[msg](0,-2.7)--node[above,black]{确认 / 拒绝}(3.5,-2.7);
+\draw[msg](3.5,-3.3)--node[above,black]{approve(ID)}(7,-3.3);
+\draw[msg](7,-3.9)--node[above,black]{放行}(10.5,-3.9);
+\draw[ret](10.5,-4.5)--node[below,black]{执行结果}(3.5,-4.5);
+\draw[ret](3.5,-5.1)--node[below,black]{回复+写审计}(0,-5.1);
+\end{tikzpicture}
+\end{center}
+
+\begin{lstlisting}[language=Python,caption={读即时 / 写确认（capabilities/computer/executor.py 摘选）}]
+READ_OPS  = {"list_dir", "read_file", "system_info"}
+WRITE_OPS = {"write_file", "delete", "move", "run_shell", "run_python", "open_app"}
+
+def request(self, action, args):
+    audit.record("computer.request", op=action, args=args)
+    if action in READ_OPS:
+        return {"preview": self._do(action, args)}          # 读：直接执行
+    if action in WRITE_OPS:
+        preview = self._describe(action, args)               # 写：先描述
+        pid = confirm.enqueue(action, args, preview)         # 入确认队列
+        return {"pending_confirm": {"id": pid, "preview": preview}}
+
+def approve(self, pid):
+    item = confirm.pop(pid)
+    audit.record("computer.execute", op=item.action, args=item.args)
+    return self._do(item.action, item.args)                  # 确认后才真正执行
+\end{lstlisting}
+
+\section{可选高级后端：Open Interpreter}
+harness 设计为可插拔：默认用内置受控后端（零外部依赖、最安全）；需要更强代码执行能力时，
+可切换 \textbf{Open Interpreter}（Apache-2.0，提供原生沙箱、权限与 MCP 接入），架构上零改动。
+
+
+\chapter{进化内核："按需进化"}
+
+\section{Agent Skills 开放标准}
+"进化"让小念的能力无限生长：新增一个能力 = 放一个 \texttt{SKILL.md}，核心代码零改动。
+我们采用 Anthropic 2025 推出的 \textbf{Agent Skills 开放标准}，核心是\textbf{三级渐进式披露}：
+
+\begin{center}
+\begin{tikzpicture}[font=\footnotesize,
+  lv/.style={draw,rounded corners=3pt,align=center,minimum height=0.85cm},
+  arr/.style={-Latex,thick,accent}]
+\node[lv,fill=accent!10,minimum width=11cm] (l1) {第一级（启动）：只载入"名称 + 描述"——每技能仅几十 token，核心永不臃肿};
+\node[lv,fill=good!12,minimum width=8.5cm,below=0.45cm of l1] (l2) {第二级（命中）：载入完整 SKILL.md 步骤};
+\node[lv,fill=primary!12,minimum width=6cm,below=0.45cm of l2] (l3) {第三级（按需）：载入引用的模板 / 脚本};
+\draw[arr](l1)--(l2);\draw[arr](l2)--(l3);
+\end{tikzpicture}
+\end{center}
+
+\noindent 这样即便装了上百个技能，启动上下文也极小；只有真正命中的技能才会被完整载入。
+
+\section{技能注册表}
+\begin{lstlisting}[language=Python,caption={技能发现与渐进披露（capabilities/skills/registry.py 摘选）}]
+def list_skills(self):
+    """第一级：只返回 名称 + 描述（极小上下文）。"""
+    return [{"name": s.name, "description": s.description} for s in self._skills]
+
+def load_skill(self, name):
+    """第二级：命中后载入完整 SKILL.md 步骤。"""
+    s = self._by_name[name]
+    return {"name": s.name, "body": s.read_body(),
+            "resources": s.list_resources()}        # 第三级资源按需读
+\end{lstlisting}
+
+\section{三个示范技能}
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{>{\bfseries\ttfamily}p{2.6cm} X}
+\toprule
+技能 & 说明 \\
+\midrule
+order-food & 点外卖：结合口味画像推荐 $\to$ 用户选择 $\to$ 下单（写操作需确认） \\
+hail-ride & 打车：常用地址 $\to$ 选择车型 $\to$ 叫车（写操作需确认） \\
+weekly-report & 周报：汇总本周记忆 / 事项，按模板生成（产出落到本地文件） \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\begin{lstlisting}[caption={SKILL.md 样例（order-food）},captionpos=b]
+---
+name: order-food
+description: 当用户想点外卖/订餐时使用；会结合用户口味画像推荐并下单。
+---
+# 点外卖技能
+## 步骤
+1. 读取用户口味画像（如"爱吃辣、不加糖"）。
+2. 给出 3 个候选（店名 + 招牌 + 价格）。
+3. 用户选择后，组装订单并发起【写操作：下单】——需用户二次确认。
+4. 确认后下单，并把"最近一次点餐"写入记忆。
+\end{lstlisting}
+
+\section{编写一个新技能：三步}
+\begin{enumerate}[leftmargin=1.6em]
+  \item 在 \texttt{capabilities/skills/builtin/} 下新建目录，写 \texttt{SKILL.md}（含 name / description / 步骤）。
+  \item 如需模板 / 脚本，放在同目录，由第三级按需载入。
+  \item 重启 daemon，技能自动被发现——\textbf{核心代码零改动}。
+\end{enumerate}
+
+\begin{keybox}{为什么这是"企业级"的扩展性}
+把"杂能力"标准化为开放格式的技能，意味着\textbf{生态可共建、可复用}：
+同一个 SKILL.md 可在任何遵循该标准的 Agent 上运行，这为后续的"技能市场"和"跨厂商生态"奠定基础。
+\end{keybox}

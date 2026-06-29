@@ -1,0 +1,229 @@
+% =====================================================================
+% Part 1 — 团队 / 主题愿景 / 需求洞察 / 产品哲学
+% =====================================================================
+
+\chapter{团队介绍}
+
+\section{参赛者}
+本作品由参赛同学\textbf{独立完成}从产品定位、市场调研、架构设计，到全栈实现、公网部署、评测与文档的端到端工作。
+
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{>{\bfseries}p{2.4cm} X}
+\toprule
+参赛者 & 戴尚好 \\
+学校 & 中国科学技术大学 \\
+GitHub & \addr{https://github.com/bcefghj} \\
+邮箱 & \addr{bcefghj@163.com} \\
+个人主页 & \addr{https://bcefghj.github.io} \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\section{分工与职责}
+虽为个人作品，但严格按"产品—工程—质量"三条线推进，确保达到企业级交付标准：
+
+\begin{itemize}[leftmargin=1.4em]
+  \item \textbf{产品与架构}：完成定位收敛（从最初的"情感陪伴"升级为"生活 OS 式助理"）、
+        技术选型与背书调研（精读美团技术报告、Anthropic / LangChain / Mem0 等一手资料）、系统分层架构设计。
+  \item \textbf{工程实现}：本地 / 服务器 daemon、LangGraph 编排、Mem0 记忆接入、电脑操控 harness、
+        Skill 系统、主动关心引擎、安全链、多 provider 模型层（含 MiniMax M2 Anthropic 协议适配）、Web UI。
+  \item \textbf{质量与交付}：场景评测套件、可观测 / 成本追踪、ADR 文档、阿里云公网部署（nginx + systemd 多项目）、本规划书。
+\end{itemize}
+
+\section{工作方法论}
+\begin{keybox}{借鉴架构，原创实现}
+本项目坚持"\textbf{站在巨人肩膀上、但不复制源码}"：所有底层框架以\textbf{依赖方式}引入（pip 安装），
+我们只编写产品逻辑与适配层；架构思想借鉴大厂成熟方案，但每一行业务代码均为原创。
+这样既保证了企业级的工程底座，又避免了直接照搬他人代码的合规风险。
+\end{keybox}
+
+\begin{center}
+\begin{tikzpicture}[font=\small,
+  node distance=0.7cm,
+  stage/.style={draw,rounded corners=3pt,fill=accent!10,minimum width=2.5cm,minimum height=0.9cm,align=center},
+  arr/.style={-Latex,thick,accent}]
+\node[stage] (a) {调研背书};
+\node[stage,right=of a] (b) {定位收敛};
+\node[stage,right=of b] (c) {架构设计};
+\node[stage,right=of c] (d) {全栈实现};
+\node[stage,right=of d] (e) {评测部署};
+\draw[arr] (a)--(b); \draw[arr] (b)--(c); \draw[arr] (c)--(d); \draw[arr] (d)--(e);
+\draw[arr,dashed,primary] (e) to[bend left=32] node[above]{\footnotesize 迭代反馈} (b);
+\end{tikzpicture}
+\end{center}
+
+
+\chapter{作品主题与愿景}
+
+\section{主题：把"手机助理"做成"生活助理"}
+现有手机 / 家居助理（小爱同学、小艺、YOYO、Siri 等）大多停留在"开灯关灯、问答式"的\textbf{工具}层面：
+它们能听懂一句话，却记不住你是谁；能回答一个问题，却办不成一件事；越贴近生活就越让人担心隐私。
+
+小念要回答的问题是：\emph{如果 AI 真的是一个"住在你电脑里的私人秘书"，它应该长什么样？}
+
+\section{愿景：Life OS——贯穿一生、主动提供帮助的伴侣}
+人对 AI 的使用方式，正在从"偶发性的单一任务"转向"持续性的智能交互"。AI 不再只是回答问题的工具，
+而应是\textbf{贯穿用户一生、主动提供帮助的智能伴侣}。其核心是\textbf{长期记忆乃至终身记忆}：
+用系统级的记忆、推理与跨端协作，把用户生活与工作的所有碎片，编织成持续、主动、个性化的体验。
+
+\begin{keybox}{对标与差异}
+对标豆包"把活干完"的办公任务模式（VibeWorking 思路：理解目标 $\to$ 自主拆解 $\to$ 调用本地电脑 / 文档 / 网页 $\to$ 一路执行到底），
+但小念把\textbf{隐私主权}作为核心差异：\textbf{数据留在你自己的电脑}，直接调用你本机的算力干活。
+\end{keybox}
+
+\section{命名故事：为什么叫"小念"}
+名字经历了多轮收敛，最终定为"\textbf{小念}"：
+\begin{itemize}[leftmargin=1.4em]
+  \item \textbf{两个字、亲切}：符合"陪伴型"产品的气质，朗朗上口。
+  \item \textbf{"念"——惦念你}：核心卖点是"\textbf{主动关心}"，"念"恰好表达"它一直惦记着你、在意你的状态"。
+  \item \textbf{"念"——记得你}：呼应"长期记忆"——念念不忘，必有回响；它记得你说过的每一件小事。
+\end{itemize}
+
+\section{设计目标（可度量）}
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{>{\bfseries}p{3cm} X}
+\toprule
+目标 & 可度量标准 \\
+\midrule
+懂你 & 跨会话记住画像 / 习惯 / 偏好；可在 UI 查看与删除（隐私主权） \\
+主动 & 在对的时间主动发起关心 / 提醒，而非 100\% 被动 \\
+干活 & 能在本机真实完成文件 / 命令 / 写作类任务（端到端完成率，而非模型分） \\
+进化 & 新增能力 = 装一个 Skill，核心代码零改动 \\
+隐私 & 关键数据默认不出本机；上云内容经 PII 脱敏 \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+
+\chapter{需求洞察}
+
+\section{现状：助理还没真正成为"助理"}
+我们把市面上主流的"助理类"产品按四个关键维度（记忆 / 主动 / 干活 / 隐私）做了横向对比。
+结论是：\textbf{没有一个产品在"记忆 + 主动 + 本机干活 + 隐私"上同时做好}，这正是小念的机会窗口。
+
+\begin{center}
+\footnotesize
+\begin{tabularx}{\linewidth}{>{\bfseries}p{2.2cm} *{4}{>{\centering\arraybackslash}X} p{3.2cm}}
+\toprule
+产品 & 长期记忆 & 主动关心 & 本机干活 & 隐私本地 & 定位 \\
+\midrule
+小爱同学 / 米家 & \xmark & 弱 & \xmark & \xmark & 家居语音控制 \\
+华为小艺 & 弱 & 弱 & 部分 & \xmark & 手机系统助理 \\
+荣耀 YOYO & 弱 & 部分 & 部分 & \xmark & 手机系统助理 \\
+苹果 Siri & 弱 & \xmark & 弱 & 部分 & 手机系统助理 \\
+豆包（专业版） & 部分 & \xmark & \cmark & \xmark & All-in-One 生产力 \\
+ChatGPT Memory & \cmark & \xmark & 弱 & \xmark & 通用对话 \\
+\rowcolor{soft}\textbf{小念} & \cmark & \cmark & \cmark & \cmark & 本地生活助理 / 秘书 \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\section{四大痛点}
+\begin{enumerate}[leftmargin=1.6em]
+  \item \textbf{没有记忆}：每次从零开始，不懂你是谁、有什么习惯与偏好；多轮之后又"失忆"。
+  \item \textbf{不会主动}：只能被动等指令，不会在对的时间主动关心、提醒、查漏补缺。
+  \item \textbf{干不成事}：能回答，但不能在你的电脑上把一件事\textbf{完整地办完}（找文件 $\to$ 处理 $\to$ 产出）。
+  \item \textbf{隐私顾虑}：越贴近生活越敏感，云端助手让人不放心把全部生活数据交出去。
+\end{enumerate}
+
+\begin{center}
+\begin{tikzpicture}[font=\small,
+  pain/.style={draw,rounded corners=3pt,fill=primary!10,minimum width=3.2cm,minimum height=0.9cm,align=center},
+  sol/.style={draw,rounded corners=3pt,fill=good!12,minimum width=3.2cm,minimum height=0.9cm,align=center},
+  arr/.style={-Latex,thick,accent}]
+\node[pain] (p1) {痛点：没有记忆};
+\node[pain,below=0.45cm of p1] (p2) {痛点：不会主动};
+\node[pain,below=0.45cm of p2] (p3) {痛点：干不成事};
+\node[pain,below=0.45cm of p3] (p4) {痛点：隐私顾虑};
+\node[sol,right=3.2cm of p1] (s1) {懂你：Mem0 长期记忆};
+\node[sol,right=3.2cm of p2] (s2) {主动关心引擎};
+\node[sol,right=3.2cm of p3] (s3) {电脑操控 + 技能};
+\node[sol,right=3.2cm of p4] (s4) {本地优先 + 安全链};
+\draw[arr] (p1)--(s1); \draw[arr] (p2)--(s2); \draw[arr] (p3)--(s3); \draw[arr] (p4)--(s4);
+\end{tikzpicture}
+\end{center}
+
+\section{趋势：从"偶发问答"到 Life OS}
+Altman 等业界领袖提出的愿景中，AI 正成为"贯穿用户一生、主动提供帮助的智能伴侣"。
+落地信号包括：ChatGPT 自 2025 年起的 Memory 功能可横跨全部历史对话、保留写作风格与长期 OKR，
+并支持逐条查看与删除以确保隐私主权；豆包专业版推出"办公任务模式"，从"回答问题"走向"把活干完"。
+这说明：\textbf{记忆 + 主动 + 执行力 + 隐私主权}，正是下一代个人 AI 的胜负手。
+
+\section{目标用户与场景}
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{>{\bfseries}p{2.6cm} X}
+\toprule
+用户画像 & 典型场景 \\
+\midrule
+个人知识工作者 & 需要一个记得自己、主动提醒、能直接在电脑上处理琐事与工作的"私人秘书" \\
+学生 / 研究者 & 资料整理、周报 / 总结、日常提醒、状态关心 \\
+（未来）小团队 & 团队秘书：任务跟进、信息沉淀、对外协作（企业版） \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\begin{keybox}{需求结论}
+市场缺的不是"更聪明的问答"，而是"\textbf{真正长在你生活里、且只属于你自己的执行型伴侣}"。
+小念用"四件核心 + 无限技能 + 本地优先"的组合，精准切入这一空白。
+\end{keybox}
+
+
+\chapter{产品设计哲学}
+
+\section{四件核心 + 无限技能}
+小念的产品结构是一个"\textbf{稳定内核 + 可生长外壳}"：内核永远只有四件事，保证精简、稳定、可靠；
+一切"杂"能力都做成可插拔的 Skill，让能力无限生长而内核不臃肿。
+
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{>{\bfseries}p{1.8cm} X p{3.8cm}}
+\toprule
+能力 & 说明 & 底座 \\
+\midrule
+懂你 & 长期记忆：用户画像 / 生活状态 / 习惯作息 / 重要关系，越用越懂你 & Mem0 + 本地隐私嵌入器 \\
+主动关心 & 在对的时间主动问候、提醒、关心，而非被动等指令 & APScheduler + 预测触发 + 静默协议 \\
+干活 & 真正在你电脑上把活干完：文件 / 命令 / 写作 / 浏览器 & 受控 harness（可选 Open Interpreter） \\
+进化 & 按需装技能扩展能力：外卖 / 打车 / 周报 / 天气\ldots & Anthropic Agent Skills 开放标准 \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\section{关键取舍}
+\begin{goodbox}{做减法，比做加法更难}
+明确\textbf{砍掉}脱离实际、算力重、收益低的功能：
+\begin{itemize}[leftmargin=1.4em,topsep=2pt]
+  \item \xmark\ \textbf{会议管理 / 会议转写}：并非人人需要，且转写对算力要求高、体验脆弱。
+  \item \xmark\ \textbf{always-on 录音 / 全程监听}：隐私风险高，与"隐私优先"定位冲突。
+  \item \xmark\ \textbf{养成类宠物游戏}：宠物只做"情感化的脸"，不喧宾夺主。
+\end{itemize}
+把省下的复杂度，全部投入到"把四件核心做精"。
+\end{goodbox}
+
+\section{设计原则}
+\begin{enumerate}[leftmargin=1.6em]
+  \item \textbf{本地优先（Local-first）}：默认所有数据留在本机，云只做"可选的大脑增强"。
+  \item \textbf{框架优先（Framework-first）}：能用大厂成熟框架就不自研，自己只写产品逻辑。
+  \item \textbf{安全默认开（Secure-by-default）}：写操作默认需要二次确认，PII 默认脱敏。
+  \item \textbf{优雅降级（Graceful degradation）}：无模型额度 / 断网时，核心链路仍可演示与使用。
+  \item \textbf{可观测（Observable）}：每一次模型调用、工具执行、确认与关心都可追溯。
+\end{enumerate}
+
+\section{一天的故事线（演示脚本）}
+\begin{center}
+\begin{tikzpicture}[font=\small,
+  t/.style={draw,circle,fill=primary,text=white,minimum size=0.75cm,inner sep=0pt},
+  ev/.style={align=left,text width=9.2cm}]
+\draw[linegray,line width=1.2pt] (0,0)--(0,-9.2);
+\foreach \y/\lab in {0/早,-2.3/中,-4.6/午,-6.9/平,-9.2/晚} \node[t] at (0,\y) {\lab};
+\node[ev] at (0.9,0) [right] {\textbf{主动问候}：结合你的状态与日程主动打招呼，给出今天的安排。};
+\node[ev] at (0.9,-2.3) [right] {\textbf{帮你干活}："帮我把这些文件整理一下"——它直接在你电脑上动手干完（写操作先确认）。};
+\node[ev] at (0.9,-4.6) [right] {\textbf{按需进化}："想吃点辣的"——装了点外卖技能的它结合你的口味画像帮你下单。};
+\node[ev] at (0.9,-6.9) [right] {\textbf{越用越懂你}：你随口说的事它都记住，画像随时间更新。};
+\node[ev] at (0.9,-9.2) [right] {\textbf{主动关心}：根据这几天的状态（累了 / 不在状态）主动关心你；宠物表情同步你的状态。};
+\end{tikzpicture}
+\end{center}
+
+\noindent 这条故事线不是 PPT 设想，而是\textbf{当前 Demo 中真实可复现}的交互（见第 15、17 章与附录评测明细）。

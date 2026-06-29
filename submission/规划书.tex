@@ -1,0 +1,131 @@
+\documentclass[11pt,a4paper]{ctexrep}
+
+\usepackage[margin=2.3cm]{geometry}
+\usepackage{graphicx}
+\usepackage[table,dvipsnames]{xcolor}
+\usepackage[most]{tcolorbox}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{xltabular}
+\usepackage{tikz}
+\usepackage{listings}
+\usepackage{hyperref}
+\usepackage{titlesec}
+\usepackage{titletoc}
+\usepackage{enumitem}
+\usepackage{microtype}
+\usepackage{fancyhdr}
+\usepackage{pifont}
+\usetikzlibrary{shapes.geometric,arrows.meta,positioning,fit,backgrounds,calc,decorations.pathreplacing,shadows.blur}
+
+% ===== 颜色体系 =====
+\definecolor{primary}{HTML}{D94F6A}
+\definecolor{accent}{HTML}{2C7BE5}
+\definecolor{ink}{HTML}{1F2430}
+\definecolor{soft}{HTML}{F3F5F9}
+\definecolor{good}{HTML}{2E9E6B}
+\definecolor{warn}{HTML}{E8A33D}
+\definecolor{codebg}{HTML}{F7F8FA}
+\definecolor{codekw}{HTML}{B5235A}
+\definecolor{codecm}{HTML}{6A9955}
+\definecolor{codestr}{HTML}{2E7D32}
+\definecolor{linegray}{HTML}{AEB6C2}
+
+\hypersetup{colorlinks=true, linkcolor=accent, urlcolor=accent, citecolor=accent,
+  pdftitle={小念 XiaoNian 作品规划书}, pdfauthor={戴尚好}}
+
+% 让代码清单（listings）内的中文也能正常显示：指定 CJK 等宽字体
+\setCJKmonofont{Songti SC}
+
+% ===== 章节样式 =====
+\titleformat{\chapter}[display]
+  {\bfseries}
+  {\flushright\fontsize{60}{60}\selectfont\color{primary!30}\thechapter}
+  {-18pt}
+  {\Huge\color{primary}}
+  [\vspace{2pt}{\color{primary}\rule{\textwidth}{1.4pt}}]
+\titlespacing*{\chapter}{0pt}{6pt}{18pt}
+
+\titleformat{\section}[block]
+  {\large\bfseries\color{ink}}
+  {\thesection}{0.6em}{}
+  [\vspace{-0.5em}{\color{linegray}\rule{\linewidth}{0.5pt}}]
+\titleformat{\subsection}[block]
+  {\normalsize\bfseries\color{accent}}
+  {\thesubsection}{0.5em}{}
+
+% ===== 页眉页脚 =====
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{linegray}小念 XiaoNian · 作品规划书}
+\fancyhead[R]{\small\color{linegray}\leftmark}
+\fancyfoot[C]{\small\color{linegray}\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0pt}
+\renewcommand{\chaptermark}[1]{\markboth{第\thechapter 章\ #1}{}}
+
+% ===== 代码样式 =====
+\lstdefinestyle{xn}{
+  backgroundcolor=\color{codebg},
+  basicstyle=\ttfamily\scriptsize,
+  keywordstyle=\color{codekw}\bfseries,
+  commentstyle=\color{codecm}\itshape,
+  stringstyle=\color{codestr},
+  numberstyle=\tiny\color{linegray},
+  numbers=left, numbersep=7pt,
+  breaklines=true, breakatwhitespace=false,
+  columns=fullflexible, keepspaces=true,
+  showstringspaces=false,
+  frame=single, framerule=0.4pt, rulecolor=\color{linegray},
+  xleftmargin=14pt, xrightmargin=4pt,
+  aboveskip=8pt, belowskip=8pt,
+  tabsize=2,
+}
+\lstset{style=xn}
+% 让 listings 支持中文（ctex 已设全局 CJK 字体）
+\lstset{
+  literate={～}{{\textasciitilde}}1
+}
+
+% ===== 自定义盒子 =====
+\newtcolorbox{keybox}[1]{colback=soft,colframe=accent,title=#1,fonttitle=\bfseries\color{white},
+  boxrule=0.6pt,arc=2pt,left=6pt,right=6pt,top=4pt,bottom=4pt}
+\newtcolorbox{warnbox}[1]{colback=warn!8,colframe=warn,title=#1,fonttitle=\bfseries\color{white},
+  boxrule=0.6pt,arc=2pt,left=6pt,right=6pt,top=4pt,bottom=4pt}
+\newtcolorbox{goodbox}[1]{colback=good!8,colframe=good,title=#1,fonttitle=\bfseries\color{white},
+  boxrule=0.6pt,arc=2pt,left=6pt,right=6pt,top=4pt,bottom=4pt}
+
+\newcommand{\cmark}{\textcolor{good}{\ding{51}}}
+\newcommand{\xmark}{\textcolor{primary}{\ding{55}}}
+\newcommand{\addr}[1]{\texttt{\textcolor{accent}{#1}}}
+
+\renewcommand{\arraystretch}{1.32}
+
+\begin{document}
+
+%% ================= 封面（第一页，含关键地址 + 个人信息）=================
+\input{parts/cover.tex}
+
+%% ================= 关键信息 + 摘要 =================
+\input{parts/abstract.tex}
+
+%% ================= 目录 =================
+\pagenumbering{Roman}
+\tableofcontents
+\cleardoublepage
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+%% ================= 正文 =================
+\input{parts/part1.tex}   % 团队 / 主题愿景 / 需求洞察 / 产品哲学
+\input{parts/part2.tex}   % 总体架构 / 编排 / 模型 / 记忆 / 操控 / 技能
+\input{parts/part3.tex}   % 主动关心 / 宠物 / 安全 / 可观测 / UI / 部署 / 评测
+\input{parts/part4.tex}   % 工程实践 / 背书 / 商业化 / 生态 / 总结
+
+%% ================= 附录 =================
+\appendix
+\input{parts/appendix.tex}
+
+\end{document}

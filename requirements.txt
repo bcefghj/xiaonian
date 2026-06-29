@@ -1,0 +1,14 @@
+APScheduler==3.11.3
+fastapi==0.128.8
+httpx==0.28.1
+langchain-core==0.3.86
+langgraph==0.6.11
+mem0ai==2.0.0
+openai==2.44.0
+pydantic==2.13.4
+python-dotenv==1.2.1
+python-multipart==0.0.20
+PyYAML==6.0.3
+qdrant-client==1.16.1
+uvicorn==0.39.0
+anthropic==0.113.0

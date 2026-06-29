@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>小念 XiaoNian · 你电脑里会成长的生活助理</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app">
+    <!-- 左栏：宠物 + 状态 + 模型 -->
+    <aside class="pane left">
+      <div class="brand">
+        <div class="logo">小念</div>
+        <div class="tagline">住在你电脑里 · 会成长的生活助理</div>
+      </div>
+
+      <div class="pet-card" id="petCard">
+        <div class="pet-face" id="petFace">(｡•‿•｡)</div>
+        <div class="pet-msg" id="petMsg">我在呢～</div>
+        <div class="energy">
+          <div class="energy-label">能量 <span id="energyVal">80</span></div>
+          <div class="energy-bar"><div class="energy-fill" id="energyFill"></div></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">模型</div>
+        <select id="providerSel" class="select"></select>
+      </div>
+
+      <div class="section">
+        <div class="section-title">生活状态（本地推断）</div>
+        <div class="life" id="lifeBox"></div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">主动关心 · 演示</div>
+        <div class="btn-row">
+          <button class="chip" onclick="demoProactive('morning')">早安</button>
+          <button class="chip" onclick="demoProactive('noon')">午间</button>
+          <button class="chip" onclick="demoProactive('evening')">晚间</button>
+          <button class="chip" onclick="demoProactive('care_fatigue')">关心</button>
+        </div>
+      </div>
+
+      <div class="footer">
+        <span id="backendInfo">本地 · 数据不出本机</span>
+      </div>
+    </aside>
+
+    <!-- 中栏：对话 -->
+    <main class="pane center">
+      <header class="chat-head">
+        <div>
+          <div class="chat-title">和小念聊聊</div>
+          <div class="chat-sub" id="chatSub">懂你 · 主动关心 · 帮你干活 · 按需进化</div>
+        </div>
+        <div class="badges">
+          <span class="badge" id="memBadge">记忆</span>
+          <span class="badge" id="provBadge">模型</span>
+        </div>
+      </header>
+
+      <div class="messages" id="messages"></div>
+
+      <div class="composer">
+        <textarea id="input" rows="1" placeholder="跟小念说点什么…（例如：帮我看看桌面有哪些文件 / 想吃点辣的 / 记住我喜欢喝美式）"></textarea>
+        <button id="sendBtn" onclick="send()">发送</button>
+      </div>
+    </main>
+
+    <!-- 右栏：记忆 / 工具 / 可观测 -->
+    <aside class="pane right">
+      <div class="tabs">
+        <button class="tab active" data-tab="memory" onclick="switchTab('memory')">小念知道你什么</button>
+        <button class="tab" data-tab="tools" onclick="switchTab('tools')">工具调用</button>
+        <button class="tab" data-tab="obs" onclick="switchTab('obs')">可观测</button>
+      </div>
+      <div class="tab-body" id="tab-memory"></div>
+      <div class="tab-body hidden" id="tab-tools"></div>
+      <div class="tab-body hidden" id="tab-obs"></div>
+    </aside>
+  </div>
+
+  <!-- 确认弹窗 -->
+  <div class="modal hidden" id="confirmModal">
+    <div class="modal-card">
+      <div class="modal-title">需要你确认这个操作</div>
+      <div class="modal-body" id="confirmText"></div>
+      <div class="modal-actions">
+        <button class="btn-ghost" onclick="resolveConfirm(false)">拒绝</button>
+        <button class="btn-primary" onclick="resolveConfirm(true)">确认执行</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

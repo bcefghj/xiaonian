@@ -1,0 +1,53 @@
+% ===== 摘要页 =====
+\thispagestyle{empty}
+\chapter*{摘要 · Executive Summary}
+\addcontentsline{toc}{chapter}{摘要 · Executive Summary}
+
+\begin{keybox}{一句话介绍}
+小念（XiaoNian）是一个\textbf{本地优先、隐私安全}的个人生活助理 / AI 秘书：住在你电脑里，
+\textbf{越用越懂你、会主动关心你、能帮你在电脑上把活干完}，并且可以按需安装 Skill 自我进化。
+核心只保留四件事（懂你 / 主动关心 / 干活 / 进化），一切"杂"能力下沉为可插拔技能——
+\textbf{功能不杂，但能无限生长。}
+\end{keybox}
+
+\vspace{0.35cm}
+\begin{goodbox}{为什么是"企业级"，而不是玩具}
+底层全部站在大厂在生产验证过的成熟开源框架上（以依赖方式引入），我们只写产品逻辑：
+编排用 \textbf{LangGraph}（Klarna / Uber / 摩根大通生产使用）、记忆用 \textbf{Mem0}（业界领先 Agent 记忆层）、
+技能用 \textbf{Anthropic Agent Skills 开放标准}、模型层多 provider 可切换
+（\textbf{MiniMax M2 / DeepSeek / 小米 MiMo}，OpenAI 与 Anthropic 双协议）。
+配套场景评测、可观测 / 成本追踪、审计日志、架构决策记录（ADR）与三种部署模式。
+\end{goodbox}
+
+\vspace{0.35cm}
+\begin{keybox}{当前完成度（可运行的成品，而非 PPT）}
+全栈已落地并端到端跑通，且\textbf{已公网部署到阿里云服务器}：本地 / 服务器 daemon + LangGraph 编排
++ Mem0 记忆 + 电脑操控（含两步确认）+ Skill 系统（3 个示范技能）+ 主动关心引擎 + 宠物形象
++ Web UI + 场景评测。评测 \textbf{8/8 场景 100\% 通过}；写文件等危险操作\textbf{实测触发两步确认并真实落地}；
+线上 Demo 已接入\textbf{真实 MiniMax M2 大模型}（Anthropic 兼容端点）。
+\end{keybox}
+
+\vspace{0.5cm}
+\section*{核心指标速览}
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{>{\bfseries\color{primary}}c X}
+\toprule
+\multicolumn{2}{l}{\textbf{\color{ink} 一眼看懂小念}} \\
+\midrule
+4 & 核心能力（懂你 / 主动关心 / 干活 / 进化），精简稳定 \\
+$\infty$ & 可插拔技能（Agent Skills 开放标准），能力无限生长 \\
+100\% & 关键数据（记忆 / 画像 / 审计 / 凭证）默认留在本机 \\
+8 / 8 & 真实场景评测全部通过 \\
+2 & 模型协议（OpenAI 兼容 + Anthropic 兼容），多 provider 热切换 \\
+3 & 部署模式（本地个人版 / 服务器企业版 / 跨厂商生态版） \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\section*{本规划书结构导读}
+全文共 4 个部分 21 章 + 8 个附录：第一部分（第 1--4 章）讲团队、主题愿景、需求洞察与产品哲学；
+第二部分（第 5--10 章）讲总体架构与六大技术内核（编排 / 模型 / 记忆 / 操控 / 技能）；
+第三部分（第 11--17 章）讲主动关心、宠物、安全隐私、可观测、Web UI、部署运维与评测体系；
+第四部分（第 18--21 章）讲工程实践、行业背书、商业化蓝图与小米生态契合。
+附录给出关键代码清单、API 文档、配置说明、评测明细、技能样例与安装指南。

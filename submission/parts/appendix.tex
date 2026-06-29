@@ -1,0 +1,208 @@
+% =====================================================================
+% 附录 — 关键代码清单 / API / 配置 / 评测 / 技能 / 安装 / 术语 / 参考
+% =====================================================================
+\chapter{关键代码清单}
+\noindent 本附录直接收录项目\textbf{真实源码}（节选自仓库 \addr{https://github.com/bcefghj/xiaonian}），
+以佐证"可运行的成品"。所有代码均为原创实现，底层框架以依赖方式引入。
+
+\section{启动入口与配置}
+\subsection{run.py}
+\lstinputlisting[language=Python]{../run.py}
+\subsection{config.py}
+\lstinputlisting[language=Python]{../config.py}
+
+\section{模型层：多 Provider 路由（OpenAI / Anthropic 双协议）}
+\subsection{model/provider.py}
+\lstinputlisting[language=Python]{../model/provider.py}
+
+\section{编排层：LangGraph 状态机}
+\subsection{graph/persona.py}
+\lstinputlisting[language=Python]{../graph/persona.py}
+\subsection{graph/tools.py}
+\lstinputlisting[language=Python]{../graph/tools.py}
+\subsection{graph/build.py}
+\lstinputlisting[language=Python]{../graph/build.py}
+
+\section{记忆层："懂你"}
+\subsection{memory/embedder.py（本地隐私嵌入器）}
+\lstinputlisting[language=Python]{../memory/embedder.py}
+\subsection{memory/store.py（Mem0 + SQLite 画像）}
+\lstinputlisting[language=Python]{../memory/store.py}
+
+\section{执行层："干活"}
+\subsection{capabilities/computer/executor.py（读即时 / 写确认）}
+\lstinputlisting[language=Python]{../capabilities/computer/executor.py}
+
+\section{进化层：Agent Skills}
+\subsection{capabilities/skills/registry.py}
+\lstinputlisting[language=Python]{../capabilities/skills/registry.py}
+
+\section{宠物形象}
+\subsection{capabilities/pet/state.py}
+\lstinputlisting[language=Python]{../capabilities/pet/state.py}
+
+\section{主动关心引擎}
+\subsection{proactive/engine.py}
+\lstinputlisting[language=Python]{../proactive/engine.py}
+\subsection{daemon/life\_state.py}
+\lstinputlisting[language=Python]{../daemon/life_state.py}
+
+\section{安全链}
+\subsection{security/confirm.py（两步确认）}
+\lstinputlisting[language=Python]{../security/confirm.py}
+\subsection{security/redact.py（PII 脱敏）}
+\lstinputlisting[language=Python]{../security/redact.py}
+\subsection{security/audit.py（审计日志）}
+\lstinputlisting[language=Python]{../security/audit.py}
+
+\section{可观测性}
+\subsection{observability/tracing.py}
+\lstinputlisting[language=Python]{../observability/tracing.py}
+
+\section{服务装配}
+\subsection{daemon/main.py（FastAPI 应用）}
+\lstinputlisting[language=Python]{../daemon/main.py}
+
+
+\chapter{API 接口文档}
+\noindent 服务默认监听 \texttt{127.0.0.1:8765}；线上经 nginx 反代于 \addr{/xiaonian/app/} 前缀。
+
+{\small
+\begin{xltabular}{\linewidth}{>{\bfseries\ttfamily\footnotesize}p{4.2cm} p{1.4cm} X}
+\toprule
+路径 & 方法 & 说明 \\
+\midrule
+\endhead
+/api/health & GET & 健康检查（名称 / provider / 记忆引擎 / 操控后端） \\
+/api/providers & GET & 列出可用模型 provider \\
+/api/provider & POST & 切换当前 provider \\
+/api/chat & POST & 单轮对话（返回 reply / tool\_events / pending\_confirm） \\
+/api/chat/stream & POST & 流式对话（SSE：token / 工具 / 确认事件） \\
+/api/confirm/pending & GET & 查询待确认的写操作 \\
+/api/confirm & POST & 确认 / 拒绝某个写操作 \\
+/api/memory/profile & GET & 读取结构化画像 \\
+/api/memory/remember & POST & 写入一条结构化记忆（category / key / value） \\
+/api/memory/search & GET & 语义检索记忆 \\
+/api/skills & GET & 列出技能（第一级：名称 + 描述） \\
+/api/skills/\{name\} & GET & 载入某技能完整步骤（第二级） \\
+/api/pet & GET & 当前宠物状态（表情 / 能量 / 文案） \\
+/api/proactive/pending & GET & 待推送的主动关心消息 \\
+/api/proactive/demo & POST & 触发一次主动关心（演示用） \\
+/api/life & GET/POST & 读取 / 更新生活状态 \\
+/api/observability & GET & 可观测数据（调用 / token / 成本 / 延迟） \\
+/api/audit & GET & 审计日志 \\
+\bottomrule
+\end{xltabular}}
+
+
+\chapter{配置项说明}
+\noindent 所有配置经环境变量注入（\texttt{.env}）。\textbf{密钥永不入库}（\texttt{.gitignore} 屏蔽 \texttt{.env}）。
+
+{\small
+\begin{xltabular}{\linewidth}{>{\bfseries\ttfamily\footnotesize}p{5.0cm} X}
+\toprule
+环境变量 & 说明 \\
+\midrule
+\endhead
+XIAONIAN\_PROVIDER & 默认模型 provider（minimax / deepseek / mimo / mock） \\
+MINIMAX\_API\_KEY & MiniMax key（coding 套餐，sk-cp- 前缀） \\
+MINIMAX\_BASE\_URL & MiniMax 端点（Anthropic 兼容：.../anthropic） \\
+MINIMAX\_PROTOCOL & 协议：anthropic（默认）或 openai \\
+MINIMAX\_MODEL & 模型名（MiniMax-M2） \\
+DEEPSEEK\_API\_KEY / BASE\_URL / MODEL & DeepSeek 配置（OpenAI 兼容） \\
+MIMO\_API\_KEY / BASE\_URL / MODEL & 小米 MiMo 配置（OpenAI 兼容） \\
+XIAONIAN\_HOST / PORT & 服务监听地址（默认 127.0.0.1:8765） \\
+XIAONIAN\_REQUIRE\_CONFIRM & 是否开启写操作两步确认（默认 true） \\
+XIAONIAN\_REDACT\_PII & 是否上云前脱敏（默认 true） \\
+XIAONIAN\_PROACTIVE\_ENABLED & 是否开启主动关心（默认 true） \\
+XIAONIAN\_QUIET\_START / END & 静默时段（默认 23--8） \\
+XIAONIAN\_USER\_ID / NAME & 用户标识与称呼 \\
+\bottomrule
+\end{xltabular}}
+
+
+\chapter{评测场景全文}
+\section{eval/scenarios.yaml}
+\lstinputlisting{../eval/scenarios.yaml}
+\section{eval/runner.py}
+\lstinputlisting[language=Python]{../eval/runner.py}
+
+
+\chapter{技能样例全文}
+\section{order-food / SKILL.md}
+\lstinputlisting{../capabilities/skills/builtin/order-food/SKILL.md}
+\section{hail-ride / SKILL.md}
+\lstinputlisting{../capabilities/skills/builtin/hail-ride/SKILL.md}
+\section{weekly-report / SKILL.md}
+\lstinputlisting{../capabilities/skills/builtin/weekly-report/SKILL.md}
+
+
+\chapter{安装与快速开始}
+\section{本地运行}
+\begin{lstlisting}[language=bash,caption={本地快速开始},captionpos=b]
+# 1) 创建环境（需 Python 3.10+，推荐 3.12）
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+
+# 2) 配置密钥
+cp .env.example .env   # 填入 MINIMAX_API_KEY 等
+
+# 3) 启动
+python run.py          # 浏览器打开 http://127.0.0.1:8765
+
+# 4) 跑评测
+python -m eval.runner
+\end{lstlisting}
+
+\section{服务器部署（多项目）}
+\begin{lstlisting}[language=bash,caption={服务器部署关键步骤},captionpos=b]
+# 安装基础组件
+apt-get install -y nginx python3-venv python3-pip git
+
+# 目录隔离：每个项目独立目录 + venv + systemd + nginx 路径
+/opt/projects/xiaonian/   # 代码 + venv
+/var/www/xiaonian/        # 介绍页静态
+/var/www/hub/             # 项目导航
+systemctl enable --now xiaonian.service
+nginx -t && systemctl reload nginx
+\end{lstlisting}
+
+
+\chapter{术语表}
+{\small
+\begin{xltabular}{\linewidth}{>{\bfseries}p{3.4cm} X}
+\toprule
+术语 & 含义 \\
+\midrule
+\endhead
+LangGraph & 把 Agent 表达为有状态图的编排框架，支持人在环与持久化 \\
+Mem0 & 业界领先的 Agent 记忆层，支持语义检索与跨会话个性化 \\
+Agent Skills & Anthropic 开放的技能标准，三级渐进式披露 \\
+人在环（HITL） & 高风险操作前由人确认的机制 \\
+两步确认 & preview $\to$ 用户确认 $\to$ 执行 \\
+PII & 个人身份信息（手机号 / 邮箱 / 身份证 / 银行卡等） \\
+本地优先 & 数据默认留在本机，云为可选增强 \\
+优雅降级 & 无额度 / 断网时核心链路仍可用 \\
+SSE & Server-Sent Events，服务器到浏览器的流式推送 \\
+\bottomrule
+\end{xltabular}}
+
+
+\chapter{参考资料}
+\begin{enumerate}[leftmargin=1.8em]
+  \item LangGraph 文档与生产案例（Klarna / Uber / 摩根大通等）。
+  \item Mem0：Agent 记忆层开源项目与论文。
+  \item Anthropic Agent Skills 开放标准与 \texttt{SKILL.md} 规范。
+  \item Open Interpreter（Apache-2.0）：本地代码执行沙箱与 MCP。
+  \item 美团技术报告：DPT-Agent、VitaBench 真实场景评测思路。
+  \item 豆包"办公任务模式"（VibeWorking）公开介绍。
+  \item ChatGPT Memory 功能与隐私主权设计。
+  \item Kocoro / CyberBoss 等个人 Agent 作品（架构参考，未复制源码）。
+\end{enumerate}
+
+\vspace{1cm}
+\begin{center}
+\footnotesize\color{linegray}
+—— 全文完 ——\\
+小念 XiaoNian · 戴尚好（中国科学技术大学）· bcefghj@163.com · github.com/bcefghj
+\end{center}

@@ -1,0 +1,10 @@
+# XiaoNian local data & secrets
+.venv/
+__pycache__/
+*.pyc
+.env
+data/
+*.log
+.DS_Store
+node_modules/
+.qdrant/

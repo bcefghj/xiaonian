@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>小念 XiaoNian — 你电脑里会成长的生活助理</title>
+<meta name="description" content="本地优先、隐私安全的个人生活助理 / AI 秘书：越用越懂你、会主动关心你、能帮你在电脑上把活干完，并可按需安装 Skill 自我进化。" />
+<style>
+:root{
+  --bg:#0e0f14;--panel:#171922;--panel2:#1f2230;--border:#2a2e3c;
+  --text:#e8ebf2;--muted:#9aa3b6;--accent:#ff7a9c;--accent2:#7cc4ff;--good:#6fe0a6;
+  --radius:18px;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);line-height:1.7;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:1100px;margin:0 auto;padding:0 24px}
+.nav{position:sticky;top:0;z-index:50;backdrop-filter:blur(12px);background:rgba(14,15,20,.7);border-bottom:1px solid var(--border)}
+.nav .wrap{display:flex;align-items:center;justify-content:space-between;height:64px}
+.brandmini{font-weight:800;font-size:20px;letter-spacing:2px;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.nav-links{display:flex;gap:22px;font-size:14px;color:var(--muted)}
+.nav-links a:hover{color:var(--text)}
+.btn{display:inline-flex;align-items:center;gap:8px;border-radius:12px;padding:11px 20px;font-weight:700;font-size:14px;cursor:pointer;transition:.2s;border:1px solid transparent}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#15151c}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(255,122,156,.3)}
+.btn-ghost{border-color:var(--border);color:var(--text)}
+.btn-ghost:hover{border-color:var(--accent2);color:var(--accent2)}
+
+/* hero */
+.hero{position:relative;padding:110px 0 90px;text-align:center;overflow:hidden}
+.hero::before{content:"";position:absolute;width:700px;height:700px;left:50%;top:-260px;transform:translateX(-50%);
+  background:radial-gradient(circle,rgba(255,122,156,.18),transparent 60%);pointer-events:none}
+.hero h1{font-size:clamp(40px,7vw,76px);font-weight:900;letter-spacing:3px;line-height:1.1}
+.hero h1 .grad{background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero .sub{font-size:clamp(16px,2.4vw,22px);color:var(--muted);margin-top:22px}
+.hero .tags{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:26px}
+.tag{font-size:13px;color:var(--muted);border:1px solid var(--border);border-radius:20px;padding:6px 14px}
+.hero .cta{display:flex;gap:14px;justify-content:center;margin-top:38px;flex-wrap:wrap}
+.pet{font-size:64px;margin-bottom:18px;animation:bob 3s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+
+/* sections */
+section{padding:72px 0;border-top:1px solid var(--border)}
+.eyebrow{color:var(--accent2);font-size:13px;letter-spacing:2px;text-transform:uppercase;font-weight:700}
+.h2{font-size:clamp(26px,4vw,40px);font-weight:800;margin:10px 0 8px}
+.lead{color:var(--muted);font-size:17px;max-width:760px}
+.grid{display:grid;gap:18px;margin-top:34px}
+.g4{grid-template-columns:repeat(4,1fr)}
+.g3{grid-template-columns:repeat(3,1fr)}
+.g2{grid-template-columns:repeat(2,1fr)}
+@media(max-width:880px){.g4,.g3,.g2{grid-template-columns:1fr 1fr}}
+@media(max-width:560px){.g4,.g3,.g2{grid-template-columns:1fr}.nav-links{display:none}}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:24px;transition:.25s}
+.card:hover{transform:translateY(-4px);border-color:var(--accent2)}
+.card .ic{font-size:30px}
+.card h3{font-size:19px;margin:14px 0 8px}
+.card p{color:var(--muted);font-size:14px}
+.kpi{display:flex;gap:26px;flex-wrap:wrap;margin-top:30px}
+.kpi .item{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:18px 26px;min-width:150px}
+.kpi .num{font-size:30px;font-weight:900;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.kpi .lbl{color:var(--muted);font-size:13px;margin-top:4px}
+.steps{counter-reset:s}
+.step{display:flex;gap:18px;padding:18px 0;border-bottom:1px dashed var(--border)}
+.step .n{flex:0 0 40px;height:40px;border-radius:12px;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--accent2)}
+.step h4{font-size:17px}.step p{color:var(--muted);font-size:14px}
+.tech{display:flex;flex-direction:column;gap:10px;margin-top:24px}
+.trow{display:grid;grid-template-columns:140px 1fr;gap:14px;padding:14px 16px;background:var(--panel);border:1px solid var(--border);border-radius:12px}
+.trow b{color:var(--accent)}
+.trow span{color:var(--muted);font-size:14px}
+.author{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:26px;display:flex;flex-wrap:wrap;gap:14px 40px}
+.author .row{display:flex;gap:10px}.author .k{color:var(--muted);min-width:72px}
+.addr{background:var(--panel2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;font-family:ui-monospace,Menlo,monospace;font-size:13px;color:var(--accent2);word-break:break-all;margin-top:8px}
+.cta-band{text-align:center;background:radial-gradient(120% 120% at 50% 0,rgba(124,196,255,.12),transparent);border-radius:24px;padding:56px 20px;margin-top:30px;border:1px solid var(--border)}
+footer{padding:40px 0;border-top:1px solid var(--border);color:var(--muted);font-size:13px;text-align:center}
+.reveal{opacity:0;transform:translateY(24px);transition:.6s}
+.reveal.in{opacity:1;transform:none}
+</style>
+</head>
+<body>
+
+<nav class="nav"><div class="wrap">
+  <div class="brandmini">小念 · XiaoNian</div>
+  <div class="nav-links">
+    <a href="#cap">核心能力</a><a href="#how">怎么用</a><a href="#tech">技术</a><a href="#author">作者</a>
+  </div>
+  <a class="btn btn-primary" href="app/" target="_blank">进入 Demo →</a>
+</div></nav>
+
+<header class="hero"><div class="wrap">
+  <div class="pet">(っ◕‿◕)っ</div>
+  <h1>你电脑里<br><span class="grad">会成长的生活助理</span></h1>
+  <p class="sub">本地优先 · 隐私安全 · 越用越懂你 · 主动关心 · 帮你干活 · 按需进化</p>
+  <div class="tags">
+    <span class="tag">LangGraph 编排</span><span class="tag">Mem0 记忆</span>
+    <span class="tag">Agent Skills</span><span class="tag">MiniMax M2</span>
+    <span class="tag">数据全本地</span>
+  </div>
+  <div class="cta">
+    <a class="btn btn-primary" href="app/" target="_blank">🚀 进入在线 Demo</a>
+    <a class="btn btn-ghost" href="https://github.com/bcefghj/xiaonian" target="_blank">⭐ GitHub 源码</a>
+  </div>
+</div></header>
+
+<section id="why"><div class="wrap">
+  <div class="eyebrow">需求洞察</div>
+  <div class="h2">手机助理，还没真正成为“助理”</div>
+  <p class="lead">现有助理停留在“开灯关灯、问答”的工具层：没有记忆、不会主动、干不成事，越贴近生活越让人担心隐私。
+  小念要做的是贯穿你生活、主动提供帮助的伴侣——而且只属于你自己的电脑。</p>
+  <div class="kpi">
+    <div class="item"><div class="num">4</div><div class="lbl">核心能力（精简稳定）</div></div>
+    <div class="item"><div class="num">∞</div><div class="lbl">可插拔技能（无限生长）</div></div>
+    <div class="item"><div class="num">100%</div><div class="lbl">数据留在本机</div></div>
+    <div class="item"><div class="num">8/8</div><div class="lbl">场景评测通过</div></div>
+  </div>
+</div></section>
+
+<section id="cap"><div class="wrap">
+  <div class="eyebrow">核心能力</div>
+  <div class="h2">四件事做精，杂事做成技能</div>
+  <div class="grid g4">
+    <div class="card reveal"><div class="ic">🧠</div><h3>懂你</h3><p>长期记忆：画像 / 生活状态 / 习惯 / 关系，越用越懂你。底座 Mem0 + 本地隐私嵌入器。</p></div>
+    <div class="card reveal"><div class="ic">💗</div><h3>主动关心</h3><p>在对的时间主动问候、提醒、关心，而不是被动等指令。cron + 预测触发 + 静默协议。</p></div>
+    <div class="card reveal"><div class="ic">🛠️</div><h3>帮你干活</h3><p>真正在你电脑上把活干完：文件 / 命令 / 写作 / 浏览器。写操作两步确认，安全可控。</p></div>
+    <div class="card reveal"><div class="ic">🌱</div><h3>按需进化</h3><p>装个 Skill 就多一项本事：点外卖 / 打车 / 写周报…核心不变、能力可长。</p></div>
+  </div>
+</div></section>
+
+<section id="how"><div class="wrap">
+  <div class="eyebrow">一天的故事线</div>
+  <div class="h2">小念怎么融入你的一天</div>
+  <div class="steps" style="margin-top:24px">
+    <div class="step reveal"><div class="n">早</div><div><h4>主动问候</h4><p>结合你的状态和日程主动打招呼，给出今天的安排。</p></div></div>
+    <div class="step reveal"><div class="n">中</div><div><h4>帮你干活</h4><p>“帮我把这些文件整理一下”——它直接在你电脑上动手干完（写操作先确认）。</p></div></div>
+    <div class="step reveal"><div class="n">午</div><div><h4>按需进化</h4><p>“想吃点辣的”——装了点外卖技能的它结合你的口味画像帮你下单。</p></div></div>
+    <div class="step reveal"><div class="n">平</div><div><h4>越用越懂你</h4><p>你随口说的事它都记住，画像随时间更新。</p></div></div>
+    <div class="step reveal"><div class="n">晚</div><div><h4>主动关心</h4><p>根据这几天的状态（累了 / 不在状态）主动关心你；宠物表情同步你的状态。</p></div></div>
+  </div>
+</div></section>
+
+<section id="tech"><div class="wrap">
+  <div class="eyebrow">技术方案</div>
+  <div class="h2">企业框架优先，每个技术点都有背书</div>
+  <p class="lead">不从零造轮子：底层全部站在大厂在生产验证过的成熟开源框架上，我们只写产品逻辑。</p>
+  <div class="tech">
+    <div class="trow reveal"><b>编排 LangGraph</b><span>持久执行 + 人在环 + 状态持久化；Klarna / Uber / 摩根大通在生产使用。</span></div>
+    <div class="trow reveal"><b>记忆 Mem0</b><span>业界领先的 Agent 记忆层，亚秒级、可本地；记忆向量化在本机完成，内容不出域。</span></div>
+    <div class="trow reveal"><b>技能 Agent Skills</b><span>Anthropic 开放标准，三级渐进式披露；Atlassian / Figma / Canva / Stripe / Notion 采用。</span></div>
+    <div class="trow reveal"><b>电脑操控</b><span>受控 harness：读操作即时、写操作两步确认；可切换 Open Interpreter 原生沙箱。</span></div>
+    <div class="trow reveal"><b>模型层</b><span>多 provider 可切换：MiniMax M2 / DeepSeek / 小米 MiMo（OpenAI + Anthropic 双协议）。</span></div>
+    <div class="trow reveal"><b>安全隐私</b><span>两步确认 + PII 上云前脱敏 + 本地审计日志 + 数据/凭证全本地。</span></div>
+  </div>
+</div></section>
+
+<section id="author"><div class="wrap">
+  <div class="eyebrow">作者信息</div>
+  <div class="h2">关于我</div>
+  <div class="author reveal" style="margin-top:24px">
+    <div class="row"><span class="k">参赛者</span><b>戴尚好</b></div>
+    <div class="row"><span class="k">学校</span><b>中国科学技术大学</b></div>
+    <div class="row"><span class="k">GitHub</span><a href="https://github.com/bcefghj" target="_blank" style="color:var(--accent2)">github.com/bcefghj</a></div>
+    <div class="row"><span class="k">邮箱</span><a href="mailto:bcefghj@163.com" style="color:var(--accent2)">bcefghj@163.com</a></div>
+    <div class="row"><span class="k">个人主页</span><a href="https://bcefghj.github.io" target="_blank" style="color:var(--accent2)">bcefghj.github.io</a></div>
+  </div>
+  <div style="margin-top:18px">
+    <div style="color:var(--muted);font-size:13px">关键地址</div>
+    <div class="addr">项目主页：http://47.119.112.225/xiaonian/</div>
+    <div class="addr">在线 Demo：http://47.119.112.225/xiaonian/app/</div>
+    <div class="addr">GitHub 源码：https://github.com/bcefghj/xiaonian</div>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <div class="cta-band reveal">
+    <div class="h2">现在就和小念聊聊</div>
+    <p class="lead" style="margin:0 auto 24px">在线 Demo 已部署，打开即用——让它帮你看看桌面、记住你的偏好、或主动关心你一次。</p>
+    <a class="btn btn-primary" href="app/" target="_blank" style="font-size:16px;padding:14px 28px">进入在线 Demo →</a>
+  </div>
+</div></section>
+
+<footer><div class="wrap">
+  小念 XiaoNian · 第七届小米集团黑客马拉松 · 高校赛区 · Xiaomi MiMo / 极客创新竞赛单元<br>
+  作者 戴尚好（中国科学技术大学） · 2026
+</div></footer>
+
+<script>
+const io=new IntersectionObserver((es)=>es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in')}),{threshold:.12});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+</script>
+</body>
+</html>

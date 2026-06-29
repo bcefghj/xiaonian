@@ -1,0 +1,202 @@
+% =====================================================================
+% Part 4 — 工程实践 / 行业背书 / 商业化 / 生态 / 总结
+% =====================================================================
+
+\chapter{工程实践}
+
+\section{目录结构}
+\begin{lstlisting}[caption={项目目录结构（节选）},captionpos=b]
+xiaonian/
+  run.py                 # 启动入口（uvicorn）
+  config.py              # 集中配置（环境变量 -> Settings/ProviderConfig）
+  requirements.txt       # 依赖清单（已冻结）
+  daemon/                # FastAPI 应用 + 生活状态推断
+  graph/                 # LangGraph：persona / tools / build
+  model/                 # 多 provider 路由（OpenAI/Anthropic）+ mock
+  memory/                # Mem0 封装 + 本地嵌入器 + SQLite 画像
+  capabilities/
+    computer/            # 电脑操控 harness（读即时/写确认）
+    skills/              # Agent Skills 注册表 + 内置技能
+    pet/                 # 宠物状态
+  proactive/             # 主动关心引擎（APScheduler）
+  security/              # 两步确认 / PII 脱敏 / 审计
+  observability/         # 本地 trace / token / 成本
+  eval/                  # 场景评测（scenarios.yaml + runner）
+  web/static/            # 三栏 Web UI（零框架）
+  site/                  # 项目介绍页 + 导航 hub（公网静态）
+  docs/adr/              # 架构决策记录（ADR）
+  submission/            # 规划书（LaTeX 源 + PDF + 截图）
+\end{lstlisting}
+
+\section{架构决策记录（ADR）}
+我们用 ADR 沉淀关键技术决策，确保选型可追溯、可评审：
+
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{>{\bfseries}p{1.2cm} p{4.4cm} X}
+\toprule
+编号 & 决策 & 要点 \\
+\midrule
+0001 & 框架优先 & 能用大厂成熟框架就不自研，自己只写产品逻辑 \\
+0002 & 记忆选 Mem0 & 业界领先 Agent 记忆层，可本地、亚秒级 \\
+0003 & 编排选 LangGraph & 持久执行 + 人在环 + 可调试，控制力强 \\
+0004 & 技能用开放标准 & Agent Skills，三级渐进披露，生态可复用 \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\section{配置与依赖管理}
+所有可变项通过环境变量集中管理（\texttt{.env}），\textbf{密钥永不入库}（\texttt{.gitignore} 屏蔽 \texttt{.env / data /} 等）；
+依赖以 \texttt{requirements.txt} 冻结，保证本地与服务器环境一致。核心依赖：
+
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{>{\bfseries\ttfamily}p{3cm} X}
+\toprule
+依赖 & 作用 \\
+\midrule
+langgraph & Agent 编排状态机 \\
+mem0ai & Agent 记忆层 \\
+anthropic & MiniMax M2 的 Anthropic 协议客户端 \\
+openai & DeepSeek / MiMo 的 OpenAI 协议客户端 \\
+fastapi / uvicorn & 服务与 ASGI \\
+apscheduler & 主动关心定时调度 \\
+qdrant-client & 本地向量库 \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\section{优雅降级的工程价值}
+"无额度 / 断网也能完整演示"不是噱头，而是工程鲁棒性的体现：它让评审、用户、CI 在任何环境下都能跑通主流程，
+也让真实大模型成为"增强项"而非"单点依赖"。这与"本地优先"的产品哲学一脉相承。
+
+
+\chapter{行业背书与对标}
+
+\section{每个技术点都有出处}
+小念的设计不是凭空想象，而是对齐业界一线实践：
+
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{>{\bfseries}p{2.6cm} X}
+\toprule
+理念 / 技术 & 业界实践对齐 \\
+\midrule
+Agent 编排 & LangGraph 被 Klarna / Uber / 摩根大通等用于生产级 Agent \\
+长期记忆 & ChatGPT Memory 横跨历史对话、可查可删（隐私主权）；Mem0 为业界领先记忆层 \\
+把活干完 & 豆包"办公任务模式"（VibeWorking）：理解目标 $\to$ 拆解 $\to$ 调用本地电脑/文档/网页 $\to$ 执行到底 \\
+技能化扩展 & Anthropic Agent Skills 开放标准，被 Atlassian/Figma/Canva/Stripe/Notion 采用 \\
+人在环确认 & 美团 DPT-Agent 等强调"高风险操作前确认" \\
+真实场景评测 & 美团 VitaBench：评测真实生活场景端到端完成率 \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\section{与豆包的正面对比}
+用户的核心诉求之一是"要比只用豆包问更强"。小念的差异化在于：
+
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{>{\bfseries}p{3cm} X X}
+\toprule
+维度 & 豆包（专业版） & 小念 \\
+\midrule
+把活干完 & \cmark\ 强 & \cmark\ 本机干活 + 两步确认 \\
+长期记忆 & 部分 & \cmark\ 结构化画像 + 语义记忆，可查可删 \\
+主动关心 & \xmark & \cmark\ 定时 + 预测 + 静默协议 \\
+隐私 & 云端 & \cmark\ 本地优先、数据不出域 \\
+可扩展 & 内置 & \cmark\ 开放技能标准，生态可共建 \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+
+\chapter{商业化与未来展望}
+
+\section{产品路线图}
+\begin{center}
+\begin{tikzpicture}[font=\footnotesize,
+  ph/.style={draw,rounded corners=3pt,align=center,minimum width=3.1cm,minimum height=1.0cm},
+  arr/.style={-Latex,thick,accent}]
+\node[ph,fill=good!14] (p1) {\textbf{个人版}\\本地隐私生活助理\\(当前)};
+\node[ph,fill=accent!14,right=1.2cm of p1] (p2) {\textbf{技能生态}\\Skill 市场\\开发者共建};
+\node[ph,fill=warn!16,right=1.2cm of p2] (p3) {\textbf{企业版}\\团队秘书\\SSO/RBAC};
+\node[ph,fill=primary!14,right=1.2cm of p3] (p4) {\textbf{生态版}\\接入小米/荣耀/华为};
+\draw[arr](p1)--(p2);\draw[arr](p2)--(p3);\draw[arr](p3)--(p4);
+\end{tikzpicture}
+\end{center}
+
+\section{四条商业化路径}
+\begin{itemize}[leftmargin=1.4em]
+  \item \textbf{个人版}：本地隐私生活助理，对标豆包但数据不出本机（隐私优先）。可走订阅制。
+  \item \textbf{技能生态}：建设 Skill 市场，开发者 / 用户共建能力；Agent Skills 已是开放标准，生态可复用，平台抽成。
+  \item \textbf{企业版}：部署到服务器，面向团队秘书 / 知识工作者生产力（To B），叠加 SSO / RBAC / 审计合规。
+  \item \textbf{生态版}：把各家终端能力封装为技能，接入小米米家 / 荣耀 / 华为生态；模型可切小米 MiMo。
+\end{itemize}
+
+\section{商业模式画布（简版）}
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{>{\bfseries}p{2.8cm} X}
+\toprule
+要素 & 内容 \\
+\midrule
+价值主张 & 只属于你自己的、能干活会关心的私人秘书 \\
+客户细分 & 个人知识工作者 / 学生 $\to$ 小团队 $\to$ 生态厂商 \\
+关键资源 & 本地记忆 + 安全链 + 开放技能生态 + 多模型适配 \\
+收入来源 & 个人订阅 + 技能市场抽成 + 企业授权 \\
+成本结构 & 研发 + 云推理（可选）+ 生态运营 \\
+护城河 & 隐私主权 + 长期记忆数据 + 技能生态网络效应 \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\section{风险与应对}
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{>{\bfseries}p{3.2cm} X}
+\toprule
+风险 & 应对 \\
+\midrule
+本地算力 / 体验上限 & 云作为"可选大脑增强"，PII 脱敏后按需上云 \\
+安全与误操作 & 写操作两步确认 + 审计 + 可回滚 \\
+模型供给波动 & 多 provider 热切 + 离线降级 \\
+生态依赖 & 采用开放标准（Agent Skills），降低单一平台绑定 \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+
+\chapter{与小米生态的契合 \& 总结}
+
+\section{为什么适配小米生态}
+\begin{itemize}[leftmargin=1.4em]
+  \item \textbf{模型层即插即用}：已支持以小米 MiMo 作为 provider（\texttt{XIAONIAN\_PROVIDER=mimo}），切换零成本。
+  \item \textbf{米家能力技能化}：米家云控等家居能力可作为一个 Skill 接入，核心逻辑零改动，天然适配小米生态。
+  \item \textbf{跨端协同的载体}：手机 / 电脑 / 汽车 / 家居能力都可封装为技能，由小念统一编排，
+        正是"把所有终端串联起来"的助理愿景。
+  \item \textbf{跨比赛可复用}：采用开放标准与多 provider，使该作品可平滑用于荣耀 / 华为等其他赛事。
+\end{itemize}
+
+\begin{keybox}{与小米 MiMo / 生态的契合}
+模型层已支持以小米 MiMo 作为 provider；米家云控等家居能力可作为一个 Skill 接入，核心逻辑零改动，
+天然适配小米生态，是小米生态的加分项，也是跨厂商可复用的资产。
+\end{keybox}
+
+\section{总结}
+小念把"AI 应是贯穿生活、主动提供帮助的伴侣"这句愿景，落成了一个\textbf{真正能在你电脑上把事办成、
+且只属于你自己}的私人秘书：
+
+\begin{itemize}[leftmargin=1.4em]
+  \item \textbf{懂你}：Mem0 + 本地嵌入器 + 结构化画像，越用越懂你，且可查可删。
+  \item \textbf{主动关心}：定时 + 预测 + 静默协议，在对的时间关心你。
+  \item \textbf{帮你干活}：受控 harness，读即时 / 写两步确认，真正在本机把活干完。
+  \item \textbf{按需进化}：Agent Skills 开放标准，能力无限生长而核心不臃肿。
+  \item \textbf{企业级底座}：LangGraph 编排、安全链、可观测、评测、ADR、三种部署，已公网落地。
+\end{itemize}
+
+\vspace{0.5cm}
+\begin{center}
+\itshape\large\color{primary}
+小念：不只回答你，更懂你、关心你、替你把事办成——而且，只属于你自己的电脑。
+\end{center}
